@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
 
@@ -6,12 +7,15 @@ namespace DiffBotMasterControl
 {
 	public class DiffBotSerial
 	{
-		public readonly CancellationToken ct;
 		public readonly SerialPort port;
+		private readonly CancellationTokenSource close;
+		private readonly CancellationToken ct;
+		private List<Thread> threads = new List<Thread>();
 
-		public DiffBotSerial(CancellationToken ct, SerialPort port) {
-			this.ct = ct;
+		public DiffBotSerial(SerialPort port) {
 			this.port = port;
+			close = new CancellationTokenSource();
+			ct = close.Token;
 			port.ReadTimeout = 5;
 		}
 
@@ -40,6 +44,31 @@ namespace DiffBotMasterControl
 		public void ReadBytes(byte[] bytes) {
 			for (int i = 0; i < bytes.Length; i++)
 				bytes[i] = ReadByte();
+		}
+
+		public void Open() {
+			port.Open();
+			foreach(var thread in threads)
+				thread.Start();
+		}
+
+		public void AddThread(Action<CancellationToken> thread) {
+			AddThread(() => thread(close.Token));
+		}
+
+		public void AddThread(Action thread) {
+			threads.Add(new Thread(() => thread()) {
+				IsBackground = true
+			});
+		}
+
+		public void Close() {
+			close.Cancel();
+			foreach (var thread in threads)
+				thread.Join();
+
+			port.Close();
+			close.Dispose();
 		}
 	}
 }

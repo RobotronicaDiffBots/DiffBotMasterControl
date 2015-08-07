@@ -15,7 +15,7 @@ namespace DiffBotMasterControl
 
 			textBoxKey_SetText("[ ]");
 
-			foreach(var ch in ControllerHandler.channels)
+			foreach(var ch in ControllerSerial.channels)
 				dataGridChannels.Rows.Add(dataGridChannels.RowCount + 1, ch[0], ch[1], ch[2]);
 			RecolourChannelGrid();
 
@@ -32,9 +32,9 @@ namespace DiffBotMasterControl
 
 			int i;
 			if (!int.TryParse(e.FormattedValue as string, out i) || i < 1 || i > 45)
-				dataGridChannels.EditingControl.Text = ControllerHandler.channels[e.RowIndex][e.ColumnIndex-1].ToString();
+				dataGridChannels.EditingControl.Text = ControllerSerial.channels[e.RowIndex][e.ColumnIndex-1].ToString();
 			else
-				ControllerHandler.channels[e.RowIndex][e.ColumnIndex-1] = i;
+				ControllerSerial.channels[e.RowIndex][e.ColumnIndex-1] = i;
 		}
 
 		private void dataGridChannels_Leave(object sender, EventArgs e) {
@@ -125,7 +125,7 @@ namespace DiffBotMasterControl
 
 		private void dataGridChannels_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e) {
 			if (e.ColumnIndex > 0) {
-				ControllerHandler.robotType = e.ColumnIndex - 1;
+				ControllerSerial.robotType = e.ColumnIndex - 1;
 				RecolourChannelGrid();
 			}
 		}
@@ -134,9 +134,9 @@ namespace DiffBotMasterControl
 			Color.LightGray, Color.White, Color.SteelBlue, Color.DeepSkyBlue
 		};
 		private void RecolourChannelGrid() {
-			for(int r = 0; r < ControllerHandler.channels.Length; r++)
+			for(int r = 0; r < ControllerSerial.channels.Length; r++)
 				for (int c = 0; c < 3; c++) {
-					var key = (ControllerHandler.Connected(r) ? 1 : 0) + (ControllerHandler.robotType == c ? 2 : 0);
+					var key = (ControllerSerial.Connected(r) ? 1 : 0) + (ControllerSerial.robotType == c ? 2 : 0);
 					dataGridChannels[c + 1, r].Style.BackColor = channelColors[key];
 				}
 		}
@@ -154,22 +154,30 @@ namespace DiffBotMasterControl
 		}
 
 		private void buttonConnectRobots_Click(object sender, EventArgs e) {
-			var port = PortSelectForm.FromConfig("Robot Serial Port", "RobotPort");
-			if (string.IsNullOrEmpty(port)) return;
+			if (RobotSerial.Connected()) {
+				RobotSerial.Disconnect();
+				buttonConnectRobots.Text = "Connect Robots";
+			} else {
+				var port = PortSelectForm.FromConfig("Robot Serial Port", "RobotPort");
+				if (!string.IsNullOrEmpty(port))
+					RobotSerial.Connect(port);
+
+				if (RobotSerial.Connected())
+					buttonConnectRobots.Text = "Disconnect Robots";
+			}
 		}
 
 		private void buttonConnectControllers_Click(object sender, EventArgs e) {
-
-			if (ControllerHandler.Connected()) {
-				ControllerHandler.Disconnect();
+			if (ControllerSerial.Connected()) {
+				ControllerSerial.Disconnect();
 				buttonConnectControllers.Text = "Connect Controllers";
 				RecolourChannelGrid();
 			} else {
 				var port = PortSelectForm.FromConfig("Controller Serial Port", "ControllerPort");
 				if (!string.IsNullOrEmpty(port))
-					ControllerHandler.Connect(port);
+					ControllerSerial.Connect(port);
 
-				if (ControllerHandler.Connected()) {
+				if (ControllerSerial.Connected()) {
 					buttonConnectControllers.Text = "Disconnect Controllers";
 					RecolourChannelGrid();
 				}

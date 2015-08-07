@@ -7,9 +7,9 @@ using System.Threading;
 
 namespace DiffBotMasterControl
 {
-	public static class ControllerHandler
+	public static class ControllerSerial
 	{
-		class ControllerPacket : DiffPacket
+		public class ControllerPacket : DiffPacket
 		{
 			public byte id { get { return bytes[0]; } }
 			public byte lsth { get { return bytes[1]; } }
@@ -38,7 +38,8 @@ namespace DiffBotMasterControl
 					recieved.Set();
 					handler = null;
 				};
-				recieved.Wait(timeout);
+				if(timeout > TimeSpan.Zero)
+					recieved.Wait(timeout);
 				handler = null;
 				return ret;
 			}
@@ -54,11 +55,9 @@ namespace DiffBotMasterControl
 		private static readonly int maxSignalStrength = 5;
 
 		private static DiffBotSerial serial;
-		private static CancellationTokenSource close;
 		private static PacketHandler handler = new PacketHandler();
-		private static List<Thread> threads = new List<Thread>(); 
 
-		static ControllerHandler()  {
+		static ControllerSerial()  {
 			for (int i = 0; i < channels.Length; i++)
 				channels[i] = new[] { i + 1, i + 13, i + 23 };
 		}
@@ -68,14 +67,16 @@ namespace DiffBotMasterControl
 		}
 
 		public static readonly TimeSpan pollingInterval = TimeSpan.FromMilliseconds(100);
-		public static void PollingThread() {
+		public static void PollingThread(CancellationToken ct) {
 			try {
-				var ct = close.Token;
 				var stopwatch = new Stopwatch();
 				while (!ct.IsCancellationRequested) {
 					stopwatch.Restart();
 					PollControllers();
-					ct.WaitHandle.WaitOne(pollingInterval - stopwatch.Elapsed);
+
+					var wait = pollingInterval - stopwatch.Elapsed;
+					if(wait > TimeSpan.Zero)
+						ct.WaitHandle.WaitOne(pollingInterval - stopwatch.Elapsed);
 				}
 			}
 			catch (Exception e) {
@@ -111,7 +112,7 @@ namespace DiffBotMasterControl
 						signalStrength[i]++;
 
 					Log.Info(string.Format("#{0} responded in {1}ms", ch, responseTimes[i].TotalMilliseconds));
-					HandleControllerPacket(p);
+					ControllerInput.Handle(p);
 
 				} else if (signalStrength[i] > 0 && --signalStrength[i] == 0) {
 					Log.Info(string.Format("#{0} lost connection", ch));
@@ -120,10 +121,6 @@ namespace DiffBotMasterControl
 					Log.Info(string.Format("#{0} missed in {1}ms", ch, stopwatch.ElapsedMilliseconds));
 				}
 			}
-		}
-
-		private static void HandleControllerPacket(ControllerPacket p) {
-			
 		}
 
 		private static void ReadThread() {
@@ -149,16 +146,10 @@ namespace DiffBotMasterControl
 
 			Log.Info("Connecting controller serial on "+portName);
 			try {
-				var port = new SerialPort(portName, 57600, Parity.None, 8, StopBits.One);
-				port.Open();
-
-				close = new CancellationTokenSource();
-				serial = new DiffBotSerial(close.Token, port);
-
-				threads.Add(new Thread(PollingThread));
-				threads.Add(new Thread(ReadThread));
-				foreach(var thread in threads)
-					thread.Start();
+				serial = new DiffBotSerial(new SerialPort(portName, 57600, Parity.None, 8, StopBits.One));
+				serial.AddThread(PollingThread);
+				serial.AddThread(ReadThread);
+				serial.Open();
 			}
 			catch (Exception e) {
 				Log.Error("Exception connecting controller serial on "+portName, e);
@@ -170,12 +161,7 @@ namespace DiffBotMasterControl
 				throw new Exception("Not connected");
 
 			Log.Info("Disconnecting controller serial");
-			close.Cancel();
-			foreach (var thread in threads)
-				thread.Join();
-
-			threads.Clear();
-			serial.port.Close();
+			serial.Close();
 			serial = null;
 		}
 
