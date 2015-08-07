@@ -76,7 +76,7 @@ namespace DiffBotMasterControl
 
 					var wait = pollingInterval - stopwatch.Elapsed;
 					if(wait > TimeSpan.Zero)
-						ct.WaitHandle.WaitOne(pollingInterval - stopwatch.Elapsed);
+						ct.WaitHandle.WaitOne(wait);
 				}
 			}
 			catch (Exception e) {

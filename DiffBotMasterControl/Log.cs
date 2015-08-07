@@ -48,7 +48,7 @@ namespace DiffBotMasterControl
 				writer.WriteLine(result.line);
 				lines++;
 			}
-			writer.FlushAsync();
+			writer.Flush();
 
 			if (lines > maxLines) {
 				box.ReadOnly = false;
