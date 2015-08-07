@@ -1,6 +1,6 @@
 ﻿namespace DiffBotMasterControl
 {
-	class ControllerInput
+	public class ControllerInput
 	{
 		private static bool enabled;
 
