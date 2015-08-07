@@ -44,13 +44,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ControllerInput.cs" />
     <Compile Include="PortSelectForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="PortSelectForm.Designer.cs">
       <DependentUpon>PortSelectForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ControllerHandler.cs" />
+    <Compile Include="ControllerSerial.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="DiffBotSerial.cs" />
     <Compile Include="DiffPacket.cs" />
