@@ -1,0 +1,4 @@
+*.user
+*.suo
+/DiffBotMasterControl/obj
+/DiffBotMasterControl/bin
