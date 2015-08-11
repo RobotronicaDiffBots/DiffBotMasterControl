@@ -7,11 +7,12 @@ namespace DiffBotMasterControl
 {
 	public class ControllerInput
 	{
-		public static readonly int ChannelCount = 10;
+		public static readonly int ControllerCount = 10;
 		public static readonly int RobotTypeCount = 3;
-		private static int[][] channels = new int[ChannelCount][];
+		private static int[][] channels = new int[ControllerCount][];
 		private static int robotType;
 		private static bool enabled;
+		private static DateTime[] recvTimes = new DateTime[ControllerCount];
 
 		public static int RobotType {
 			get { return robotType; }
@@ -57,7 +58,7 @@ namespace DiffBotMasterControl
 			channels[controller][robotType] = value;
 			//save channel config
 			var s = new StringBuilder();
-			for(int i = 0; i < ChannelCount; i++)
+			for(int i = 0; i < ControllerCount; i++)
 				for (int j = 0; j < channels[i].Length; j++)
 					s.Append("" + i + ',' + j + ',' + channels[i][j] + '|');
 
@@ -70,11 +71,20 @@ namespace DiffBotMasterControl
 		}
 
 		public static void Handle(ControllerSerial.ControllerPacket p) {
-			bool lt = (p.but & 0x80) != 0;
-			bool rt = (p.but & 0x40) != 0;
-			byte rID = (byte)channels[p.id - 1][robotType];
-			if (lt) RobotSerial.AddPacket(rID, 120, 3, 0, 0, 40);
-			if (rt) RobotSerial.AddPacket(rID, 120, 0, 0, 0, 40);
+			if (p.remoteID < 1 || p.remoteID > ControllerCount) return;
+			recvTimes[p.remoteID - 1] = DateTime.Now;
+
+			p.robotID = (byte)channels[p.remoteID - 1][robotType];
+			RobotSerial.AddPacket(p.robotID, p.type, p.ldrive, p.rdrive, p.remoteID, p.buttons);
+
+			bool lt = (p.buttons & 0x80) != 0;
+			bool rt = (p.buttons & 0x40) != 0;
+			if (lt) RobotSerial.AddPacket(p.robotID, 120, 3, 0, 0, 40);
+			if (rt) RobotSerial.AddPacket(p.robotID, 120, 0, 0, 0, 40);
+		}
+
+		public static bool Connected(int controller) {
+			return DateTime.Now - recvTimes[controller] < TimeSpan.FromSeconds(.5);
 		}
 	}
 }

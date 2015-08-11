@@ -22,6 +22,7 @@ namespace DiffBotMasterControl
 		}
 
 		private void MainForm_Load(object sender, EventArgs e) {
+			ControllerPortForm.Init();
 			Commands.Load();
 		}
 
@@ -135,9 +136,9 @@ namespace DiffBotMasterControl
 			Color.LightGray, Color.White, Color.SteelBlue, Color.DeepSkyBlue
 		};
 		private void RecolourChannelGrid() {
-			for (int r = 0; r < ControllerInput.ChannelCount; r++)
+			for (int r = 0; r < ControllerInput.ControllerCount; r++)
 				for (int c = 0; c < ControllerInput.RobotTypeCount; c++) {
-					var key = (ControllerSerial.Connected(r) ? 1 : 0) + (ControllerInput.RobotType == c ? 2 : 0);
+					var key = (ControllerInput.Connected(r) ? 1 : 0) + (ControllerInput.RobotType == c ? 2 : 0);
 					dataGridChannels[c + 1, r].Style.BackColor = channelColors[key];
 				}
 		}
@@ -149,11 +150,7 @@ namespace DiffBotMasterControl
 		public void CommandFinished() {
 			Invoke(new Action(UpdateExecuteButton));
 		}
-
-		public void ConnectionChanged() {
-			BeginInvoke(new Action(RecolourChannelGrid));
-		}
-
+		
 		private void buttonConnectRobots_Click(object sender, EventArgs e) {
 			if (RobotSerial.Connected()) {
 				RobotSerial.Disconnect();
@@ -168,25 +165,16 @@ namespace DiffBotMasterControl
 			}
 		}
 
-		private void buttonConnectControllers_Click(object sender, EventArgs e) {
-			if (ControllerSerial.Connected()) {
-				ControllerSerial.Disconnect();
-				buttonConnectControllers.Text = "Connect Controllers";
-				RecolourChannelGrid();
-			} else {
-				var port = PortSelectForm.FromConfig("Controller Serial Port", "ControllerPort");
-				if (!string.IsNullOrEmpty(port))
-					ControllerSerial.Connect(port);
-
-				if (ControllerSerial.Connected()) {
-					buttonConnectControllers.Text = "Disconnect Controllers";
-					RecolourChannelGrid();
-				}
-			}
+		private void buttonControllerPorts_Click(object sender, EventArgs e) {
+			ControllerPortForm.Show();
 		}
 
 		private void timerUpdateLog_Tick(object sender, EventArgs e) {
 			Log.Update(textBoxLog);
+		}
+
+		private void timerUpdateGrid_Tick(object sender, EventArgs e) {
+			RecolourChannelGrid();
 		}
 
 		private void listBoxCommands_MouseDoubleClick(object sender, MouseEventArgs e) {

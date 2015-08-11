@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
-using System.Threading;
 
 namespace DiffBotMasterControl
 {
@@ -49,13 +48,13 @@ namespace DiffBotMasterControl
 
 		public static void AddPacket(byte rID, byte type, byte d1, byte d2, byte d3, byte d4) {
 			if (Connected())
-				packetQueue.Add(new[] { rID, type, d1, d2, d3, d4, ++seqno});
+				packetQueue.Add(new[] { rID, type, d1, d2, d3, d4, ++seqno });
 		}
 
-		private static void WriteThread(CancellationToken ct) {
+		private static void WriteThread(DiffBotSerial serial) {
 			try {
-				while (true)
-					serial.SendPacket(packetQueue.Take(ct));
+				var ct = serial.CancellationToken();
+				while (true) serial.SendPacket(packetQueue.Take(ct));
 			}
 			catch (OperationCanceledException) {}
 			catch (Exception e) {
@@ -64,12 +63,13 @@ namespace DiffBotMasterControl
 		}
 
 		private static readonly TimeSpan heartbeatInterval = TimeSpan.FromSeconds(1);
-		private static void HeartbeatThread(CancellationToken ct) {
+		private static void HeartbeatThread(DiffBotSerial serial) {
 			try {
+				var ct = serial.CancellationToken();
 				var stopwatch = new Stopwatch();
 				while (!ct.IsCancellationRequested) {
 					stopwatch.Restart();
-					AddPacket(250, 0, 0, 0, 0, 0);
+					AddPacket(250, 0, 0, 0, 0, 0);//TODO keep alive only robots with connected controllers
 
 					var wait = heartbeatInterval - stopwatch.Elapsed;
 					if (wait > TimeSpan.Zero)

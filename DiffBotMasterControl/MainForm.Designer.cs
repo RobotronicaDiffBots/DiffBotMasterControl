@@ -26,8 +26,8 @@
 		/// </summary>
 		private void InitializeComponent() {
 			this.components = new System.ComponentModel.Container();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.dataGridChannels = new System.Windows.Forms.DataGridView();
 			this.Controller = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.Cube = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -38,11 +38,12 @@
 			this.buttonExecute = new System.Windows.Forms.Button();
 			this.label1 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
-			this.buttonConnectControllers = new System.Windows.Forms.Button();
+			this.buttonControllerPorts = new System.Windows.Forms.Button();
 			this.buttonConnectRobots = new System.Windows.Forms.Button();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.textBoxKey = new System.Windows.Forms.RichTextBox();
 			this.timerUpdateLog = new System.Windows.Forms.Timer(this.components);
+			this.timerUpdateGrid = new System.Windows.Forms.Timer(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.dataGridChannels)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -56,14 +57,14 @@
 			this.dataGridChannels.AllowUserToDeleteRows = false;
 			this.dataGridChannels.AllowUserToResizeColumns = false;
 			this.dataGridChannels.AllowUserToResizeRows = false;
-			dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-			dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.dataGridChannels.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+			dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+			dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridChannels.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
 			this.dataGridChannels.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.dataGridChannels.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Controller,
@@ -87,10 +88,10 @@
 			// Controller
 			// 
 			this.Controller.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.Transparent;
-			dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.Transparent;
-			this.Controller.DefaultCellStyle = dataGridViewCellStyle2;
+			dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			dataGridViewCellStyle6.SelectionBackColor = System.Drawing.Color.Transparent;
+			dataGridViewCellStyle6.SelectionForeColor = System.Drawing.Color.Transparent;
+			this.Controller.DefaultCellStyle = dataGridViewCellStyle6;
 			this.Controller.HeaderText = "Controller";
 			this.Controller.Name = "Controller";
 			this.Controller.ReadOnly = true;
@@ -179,16 +180,16 @@
 			this.label2.TabIndex = 5;
 			this.label2.Text = "Commands";
 			// 
-			// buttonConnectControllers
+			// buttonControllerPorts
 			// 
-			this.buttonConnectControllers.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.buttonConnectControllers.Location = new System.Drawing.Point(0, 0);
-			this.buttonConnectControllers.Name = "buttonConnectControllers";
-			this.buttonConnectControllers.Size = new System.Drawing.Size(111, 25);
-			this.buttonConnectControllers.TabIndex = 6;
-			this.buttonConnectControllers.Text = "Controller Ports";
-			this.buttonConnectControllers.UseVisualStyleBackColor = true;
-			this.buttonConnectControllers.Click += new System.EventHandler(this.buttonConnectControllers_Click);
+			this.buttonControllerPorts.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.buttonControllerPorts.Location = new System.Drawing.Point(0, 0);
+			this.buttonControllerPorts.Name = "buttonControllerPorts";
+			this.buttonControllerPorts.Size = new System.Drawing.Size(111, 25);
+			this.buttonControllerPorts.TabIndex = 6;
+			this.buttonControllerPorts.Text = "Controller Ports";
+			this.buttonControllerPorts.UseVisualStyleBackColor = true;
+			this.buttonControllerPorts.Click += new System.EventHandler(this.buttonControllerPorts_Click);
 			// 
 			// buttonConnectRobots
 			// 
@@ -214,7 +215,7 @@
 			// 
 			// splitContainer1.Panel2
 			// 
-			this.splitContainer1.Panel2.Controls.Add(this.buttonConnectControllers);
+			this.splitContainer1.Panel2.Controls.Add(this.buttonControllerPorts);
 			this.splitContainer1.Size = new System.Drawing.Size(225, 25);
 			this.splitContainer1.SplitterDistance = 110;
 			this.splitContainer1.TabIndex = 8;
@@ -243,6 +244,11 @@
 			this.timerUpdateLog.Enabled = true;
 			this.timerUpdateLog.Interval = 200;
 			this.timerUpdateLog.Tick += new System.EventHandler(this.timerUpdateLog_Tick);
+			// 
+			// timerUpdateGrid
+			// 
+			this.timerUpdateGrid.Enabled = true;
+			this.timerUpdateGrid.Tick += new System.EventHandler(this.timerUpdateGrid_Tick);
 			// 
 			// MainForm
 			// 
@@ -280,7 +286,7 @@
 		private System.Windows.Forms.Button buttonExecute;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Label label2;
-		private System.Windows.Forms.Button buttonConnectControllers;
+		private System.Windows.Forms.Button buttonControllerPorts;
 		private System.Windows.Forms.Button buttonConnectRobots;
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private System.Windows.Forms.RichTextBox textBoxKey;
@@ -289,6 +295,7 @@
 		private System.Windows.Forms.DataGridViewTextBoxColumn Amoeba;
 		private System.Windows.Forms.DataGridViewTextBoxColumn Appendage;
 		private System.Windows.Forms.Timer timerUpdateLog;
+		private System.Windows.Forms.Timer timerUpdateGrid;
 	}
 }
 

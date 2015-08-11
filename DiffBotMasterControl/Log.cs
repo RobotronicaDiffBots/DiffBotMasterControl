@@ -83,7 +83,7 @@ namespace DiffBotMasterControl
 		}
 
 		public static void Warn(string s) {
-			InternalLog(s, Color.YellowGreen);
+			InternalLog(s, Color.DarkKhaki);
 		}
 
 		public static void Info(string s) {

@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO.Ports;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace DiffBotMasterControl
 {
@@ -10,161 +11,109 @@ namespace DiffBotMasterControl
 	{
 		public class ControllerPacket : DiffPacket
 		{
-			public byte id { get { return bytes[0]; } }
-			public byte lsth { get { return bytes[1]; } }
-			public byte lstv { get { return bytes[2]; } }
-			public byte rsth { get { return bytes[3]; } }
-			public byte rstv { get { return bytes[4]; } }
-			public byte but { get { return bytes[5]; } }
+			public byte robotID { get { return bytes[0]; } set { bytes[0] = value; } }
+			public byte type { get { return bytes[1]; } set { bytes[1] = value; } }
+			public byte ldrive { get { return bytes[2]; } set { bytes[2] = value; } }
+			public byte rdrive { get { return bytes[3]; } set { bytes[3] = value; } }
+			public byte remoteID { get { return bytes[4]; } set { bytes[4] = value; } }
+			public byte buttons { get { return bytes[5]; } set { bytes[5] = value; } }
+			public byte i { get { return bytes[6]; } set { bytes[6] = value; } }
 
-			public ControllerPacket() : base(6) { }
+			public ControllerPacket() : base(7) { }
 		}
 
-		class PacketHandler
-		{
-			public delegate bool Filter(ControllerPacket p);
-			private Action<ControllerPacket> handler;
-			private ManualResetEventSlim recieved = new ManualResetEventSlim();
+		private static Dictionary<string, DiffBotSerial> serials = new Dictionary<string, DiffBotSerial>();
 
-			public ControllerPacket Wait(Filter filter, TimeSpan timeout) {
-				if(handler != null) throw new Exception("Alreading waiting on a packet");
-
-				ControllerPacket ret = null;
-				recieved.Reset();
-				handler = p => {
-					if (!filter(p)) return;
-					ret = p;
-					recieved.Set();
-					handler = null;
-				};
-				if(timeout > TimeSpan.Zero)
-					recieved.Wait(timeout);
-				handler = null;
-				return ret;
-			}
-
-			public void Handle(ControllerPacket p) {
-				if (handler != null) handler(p);
-				else Log.Warn("Packet dropped");
-			}
-		}
-
-		private static int[] signalStrength = new int[ControllerInput.ChannelCount];
-		private static readonly int maxSignalStrength = 5;
-
-		private static DiffBotSerial serial;
-		private static PacketHandler handler = new PacketHandler();
-
-		public static bool Connected(int remote) {
-			return Connected() && signalStrength[remote] > 0;
-		}
-
-		public static readonly TimeSpan pollingInterval = TimeSpan.FromMilliseconds(100);
-		public static void PollingThread(CancellationToken ct) {
+		private static void ReadThread(DiffBotSerial serial) {
 			try {
-				var stopwatch = new Stopwatch();
-				while (!ct.IsCancellationRequested) {
-					stopwatch.Restart();
-					PollControllers();
+				while (true) ControllerInput.Handle(ReadPacket(serial, true));
+			}
+			catch (OperationCanceledException) {}
+			catch (InvalidOperationException e) {
+				Log.Error(serial.port.PortName + " Read Thread: " + e.Message);
+			} catch (IOException e) {
+				Log.Error(serial.port.PortName + " Read Thread: " + e.Message);
+			} catch (AccessViolationException e) {
+				Log.Error(serial.port.PortName + " Read Thread: " + e.Message);
+			} catch (Exception e) {
+				Log.Error(serial.port.PortName + " Read Thread", e);
+			} finally {
+				Task.Run(() => ClosePort(serial));
+			}
+		}
 
-					var wait = pollingInterval - stopwatch.Elapsed;
-					if(wait > TimeSpan.Zero)
-						ct.WaitHandle.WaitOne(wait);
+		private static ControllerPacket ReadPacket(DiffBotSerial serial, bool warn) {
+			while (true) {
+				if (serial.ReadByte() != 0xAA || serial.ReadByte() != 0x55) continue;
+				var p = new ControllerPacket();
+				serial.ReadBytes(p.bytes);
+				if (p.CRC()) return p;
+				if (warn) Log.Warn("CRC failed");
+			}
+		}
+
+		public static void ScanPort(string portName, TimeSpan timeout) {
+			Log.Info("Scanning port "+portName);
+			var serial = DiffBotSerial.Create(portName);
+			try {
+				serial.Open();
+				var task = Task.Run(() => ReadPacket(serial, false));
+				if (!task.Wait(timeout)) {
+					serial.Close();
+					Log.Info("Scan timed out " + portName);
+				} else {
+					serial.AddThread(ReadThread);
+					_AddPort(serial);
 				}
+			} catch (Exception) {
+				Log.Warn("Scanning failed "+portName);
+			}
+		}
+
+		private static void _AddPort(DiffBotSerial serial) {
+			lock (serials) {
+				ClosePort(serial.port.PortName);
+				serials[serial.port.PortName] = serial;
+				ControllerPortForm.Instance.Add(serial.port.PortName);
+			}
+			Log.Info("Opened controller port " + serial.port.PortName);
+		}
+
+		public static void ClosePort(string portName) {
+			lock (serials) {
+				DiffBotSerial serial;
+				if(serials.TryGetValue(portName, out serial))
+					ClosePort(serial);
+			}
+		}
+
+		public static void ClosePort(DiffBotSerial serial) {
+			lock (serials) {
+				DiffBotSerial stored;
+				if(serials.TryGetValue(serial.port.PortName, out stored) && stored == serial) {
+					serials.Remove(serial.port.PortName);
+					ControllerPortForm.Instance.Remove(serial.port.PortName);
+				}
+			}
+			try {
+				serial.Close();
+				Log.Info("Closed controller port " + serial.port.PortName);
 			}
 			catch (Exception e) {
-				Log.Error("Exception in Polling Thread", e);
+				Log.Error("Exception closing controller port "+serial.port.PortName, e);
 			}
 		}
 
-		public static readonly TimeSpan responseInterval = pollingInterval - TimeSpan.FromMilliseconds(20);
-		private static void PollControllers() {
-			for(int i = 0; i < 10; i++)
-				serial.SendPacket(new byte[] {250});
-
-			var stopwatch = new Stopwatch();
-			stopwatch.Start();
-
-			var packets = new ControllerPacket[ControllerInput.ChannelCount];
-			var responseTimes = new TimeSpan[ControllerInput.ChannelCount];
-
-			while (packets.Any(a => a == null)) {
-				var p = handler.Wait(f => f.id > 0 && f.id <= packets.Length, responseInterval-stopwatch.Elapsed);
-				if (p == null) break;
-
-				if (packets[p.id - 1] == null) {
-					packets[p.id - 1] = p;
-					responseTimes[p.id - 1] = stopwatch.Elapsed;
-				}
-				//serial.SendPacket();
-			}
-
-			for (int i = 0; i < packets.Length; i++) {
-				var ch = i + 1;
-				var p = packets[i];
-				if (p != null) {
-					if (signalStrength[i] == 0) {
-						signalStrength[i] = maxSignalStrength;
-						Log.Info(string.Format("#{0} connected", ch));
-						MainForm.Instance.ConnectionChanged();
-					} else if (signalStrength[i] < 5)
-						signalStrength[i]++;
-
-					Log.Info(string.Format("#{0} responded in {1}ms", ch, responseTimes[i].TotalMilliseconds));
-					ControllerInput.Handle(p);
-
-				} else if (signalStrength[i] > 0 && --signalStrength[i] == 0) {
-					Log.Info(string.Format("#{0} lost connection", ch));
-					MainForm.Instance.ConnectionChanged();
-				} else if (signalStrength[i] > 0) {
-					Log.Info(string.Format("#{0} missed in {1}ms", ch, stopwatch.ElapsedMilliseconds));
-				}
-			}
-		}
-
-		private static void ReadThread() {
+		public static void AddPort(string portName) {
 			try {
-				while (true) {
-					if (serial.ReadByte() != 0xAA || serial.ReadByte() != 0x55) continue;
-					var p = new ControllerPacket();
-					serial.ReadBytes(p.bytes);
-					if (p.CRC()) handler.Handle(p);
-					else Log.Warn("CRC failed");
-				}
-			}
-			catch (OperationCanceledException) {} 
-			catch (Exception e) {
-				Log.Error("Exception in Controller Read Thread", e);
-			}
-		}
-
-		public static void Connect(string portName) {
-			if (serial != null)
-				throw new Exception("Already connected");
-
-			Log.Info("Connecting controller serial on "+portName);
-			try {
-				serial = new DiffBotSerial(new SerialPort(portName, 57600, Parity.None, 8, StopBits.One));
-				serial.AddThread(PollingThread);
+				var serial = DiffBotSerial.Create(portName);
 				serial.AddThread(ReadThread);
 				serial.Open();
+				_AddPort(serial);
 			}
 			catch (Exception e) {
-				Log.Error("Exception connecting controller serial on "+portName, e);
+				Log.Error("Exception opening controller port "+portName, e);
 			}
-		}
-
-		public static void Disconnect() {
-			if (serial == null)
-				throw new Exception("Not connected");
-
-			Log.Info("Disconnecting controller serial");
-			serial.Close();
-			serial = null;
-		}
-
-		public static bool Connected() {
-			return serial != null;
 		}
 	}
 }

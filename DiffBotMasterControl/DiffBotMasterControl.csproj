@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UsbNotification.cs" />
     <Compile Include="ControllerInput.cs" />
     <Compile Include="ControllerPortForm.cs">
       <SubType>Form</SubType>
