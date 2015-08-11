@@ -46,5 +46,29 @@ namespace DiffBotMasterControl.Properties {
                 this["RobotPort"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int RobotType {
+            get {
+                return ((int)(this["RobotType"]));
+            }
+            set {
+                this["RobotType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Channels {
+            get {
+                return ((string)(this["Channels"]));
+            }
+            set {
+                this["Channels"] = value;
+            }
+        }
     }
 }

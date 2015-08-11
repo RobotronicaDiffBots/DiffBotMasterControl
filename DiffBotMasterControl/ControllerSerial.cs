@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
@@ -46,21 +45,15 @@ namespace DiffBotMasterControl
 
 			public void Handle(ControllerPacket p) {
 				if (handler != null) handler(p);
+				else Log.Warn("Packet dropped");
 			}
 		}
 
-		public static int[][] channels = new int[10][];
-		public static int robotType;
-		private static int[] signalStrength = new int[10];
+		private static int[] signalStrength = new int[ControllerInput.ChannelCount];
 		private static readonly int maxSignalStrength = 5;
 
 		private static DiffBotSerial serial;
 		private static PacketHandler handler = new PacketHandler();
-
-		static ControllerSerial()  {
-			for (int i = 0; i < channels.Length; i++)
-				channels[i] = new[] { i + 1, i + 13, i + 23 };
-		}
 
 		public static bool Connected(int remote) {
 			return Connected() && signalStrength[remote] > 0;
@@ -86,21 +79,27 @@ namespace DiffBotMasterControl
 
 		public static readonly TimeSpan responseInterval = pollingInterval - TimeSpan.FromMilliseconds(20);
 		private static void PollControllers() {
-			serial.SendPacket(new byte[] {250});
+			for(int i = 0; i < 10; i++)
+				serial.SendPacket(new byte[] {250});
+
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
 
-			var packets = new ControllerPacket[channels.Length];
-			var responseTimes = new TimeSpan[channels.Length];
+			var packets = new ControllerPacket[ControllerInput.ChannelCount];
+			var responseTimes = new TimeSpan[ControllerInput.ChannelCount];
 
 			while (packets.Any(a => a == null)) {
 				var p = handler.Wait(f => f.id > 0 && f.id <= packets.Length, responseInterval-stopwatch.Elapsed);
 				if (p == null) break;
-				packets[p.id - 1] = p;
-				responseTimes[p.id - 1] = stopwatch.Elapsed;
+
+				if (packets[p.id - 1] == null) {
+					packets[p.id - 1] = p;
+					responseTimes[p.id - 1] = stopwatch.Elapsed;
+				}
+				//serial.SendPacket();
 			}
 
-			for (int i = 0; i < channels.Length; i++) {
+			for (int i = 0; i < packets.Length; i++) {
 				var ch = i + 1;
 				var p = packets[i];
 				if (p != null) {
@@ -126,12 +125,11 @@ namespace DiffBotMasterControl
 		private static void ReadThread() {
 			try {
 				while (true) {
-					if (serial.ReadByte() != 0xAA) continue;
-					if (serial.ReadByte() != 0x55) continue;
+					if (serial.ReadByte() != 0xAA || serial.ReadByte() != 0x55) continue;
 					var p = new ControllerPacket();
 					serial.ReadBytes(p.bytes);
-					if (p.CRC())
-						handler.Handle(p);
+					if (p.CRC()) handler.Handle(p);
+					else Log.Warn("CRC failed");
 				}
 			}
 			catch (OperationCanceledException) {} 

@@ -15,8 +15,7 @@ namespace DiffBotMasterControl
 
 			textBoxKey_SetText("[ ]");
 
-			foreach(var ch in ControllerSerial.channels)
-				dataGridChannels.Rows.Add(dataGridChannels.RowCount + 1, ch[0], ch[1], ch[2]);
+			ControllerInput.PopulateChannelGrid(dataGridChannels);
 			RecolourChannelGrid();
 
 			Instance = this;
@@ -32,9 +31,9 @@ namespace DiffBotMasterControl
 
 			int i;
 			if (!int.TryParse(e.FormattedValue as string, out i) || i < 1 || i > 45)
-				dataGridChannels.EditingControl.Text = ControllerSerial.channels[e.RowIndex][e.ColumnIndex-1].ToString();
+				dataGridChannels.EditingControl.Text = ControllerInput.GetChannel(e.RowIndex, e.ColumnIndex-1).ToString();
 			else
-				ControllerSerial.channels[e.RowIndex][e.ColumnIndex-1] = i;
+				ControllerInput.SetChannel(e.RowIndex, e.ColumnIndex-1, i);
 		}
 
 		private void dataGridChannels_Leave(object sender, EventArgs e) {
@@ -125,7 +124,9 @@ namespace DiffBotMasterControl
 
 		private void dataGridChannels_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e) {
 			if (e.ColumnIndex > 0) {
-				ControllerSerial.robotType = e.ColumnIndex - 1;
+				ControllerInput.RobotType = e.ColumnIndex - 1;
+				dataGridChannels.EndEdit();
+				dataGridChannels.CurrentCell = null;
 				RecolourChannelGrid();
 			}
 		}
@@ -134,9 +135,9 @@ namespace DiffBotMasterControl
 			Color.LightGray, Color.White, Color.SteelBlue, Color.DeepSkyBlue
 		};
 		private void RecolourChannelGrid() {
-			for(int r = 0; r < ControllerSerial.channels.Length; r++)
-				for (int c = 0; c < 3; c++) {
-					var key = (ControllerSerial.Connected(r) ? 1 : 0) + (ControllerSerial.robotType == c ? 2 : 0);
+			for (int r = 0; r < ControllerInput.ChannelCount; r++)
+				for (int c = 0; c < ControllerInput.RobotTypeCount; c++) {
+					var key = (ControllerSerial.Connected(r) ? 1 : 0) + (ControllerInput.RobotType == c ? 2 : 0);
 					dataGridChannels[c + 1, r].Style.BackColor = channelColors[key];
 				}
 		}

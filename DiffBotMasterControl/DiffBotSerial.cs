@@ -65,7 +65,8 @@ namespace DiffBotMasterControl
 		public void Close() {
 			close.Cancel();
 			foreach (var thread in threads)
-				thread.Join();
+				if(thread.IsAlive)
+					thread.Join();
 
 			port.Close();
 			close.Dispose();

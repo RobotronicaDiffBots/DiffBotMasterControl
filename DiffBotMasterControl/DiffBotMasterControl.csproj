@@ -45,6 +45,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ControllerInput.cs" />
+    <Compile Include="ControllerPortForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ControllerPortForm.Designer.cs">
+      <DependentUpon>ControllerPortForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PortSelectForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -68,6 +74,9 @@
     <Compile Include="UserCommands.cs">
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Include="ControllerPortForm.resx">
+      <DependentUpon>ControllerPortForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PortSelectForm.resx">
       <DependentUpon>PortSelectForm.cs</DependentUpon>
     </EmbeddedResource>

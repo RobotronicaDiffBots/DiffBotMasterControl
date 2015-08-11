@@ -3,11 +3,11 @@ using System.Windows.Forms;
 
 namespace DiffBotMasterControl
 {
-	public partial class PortSelectForm : Form
+	public partial class ControllerPortForm : Form
 	{
 		public string Port { get { return comboBoxPort.Text; } }
 
-		public PortSelectForm(string initial) {
+		public ControllerPortForm(string initial) {
 			InitializeComponent();
 
 			comboBoxPort.Text = initial;

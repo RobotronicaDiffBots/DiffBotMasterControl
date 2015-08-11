@@ -186,7 +186,7 @@
 			this.buttonConnectControllers.Name = "buttonConnectControllers";
 			this.buttonConnectControllers.Size = new System.Drawing.Size(111, 25);
 			this.buttonConnectControllers.TabIndex = 6;
-			this.buttonConnectControllers.Text = "Connect Controllers";
+			this.buttonConnectControllers.Text = "Controller Ports";
 			this.buttonConnectControllers.UseVisualStyleBackColor = true;
 			this.buttonConnectControllers.Click += new System.EventHandler(this.buttonConnectControllers_Click);
 			// 

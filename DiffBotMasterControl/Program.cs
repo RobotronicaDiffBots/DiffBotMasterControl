@@ -13,6 +13,7 @@ namespace DiffBotMasterControl
 		/// </summary>
 		[STAThread]
 		static void Main() {
+			Properties.Settings.Default.PropertyChanged += (sender, args) => Properties.Settings.Default.Save();
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			Application.Run(new MainForm());
