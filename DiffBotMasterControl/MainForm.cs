@@ -31,7 +31,7 @@ namespace DiffBotMasterControl
 				return;
 
 			int i;
-			if (!int.TryParse(e.FormattedValue as string, out i) || i < 1 || i > 45)
+			if (!int.TryParse(e.FormattedValue as string, out i) || i < 1 || i > 255)
 				dataGridChannels.EditingControl.Text = ControllerInput.GetChannel(e.RowIndex, e.ColumnIndex-1).ToString();
 			else
 				ControllerInput.SetChannel(e.RowIndex, e.ColumnIndex-1, i);

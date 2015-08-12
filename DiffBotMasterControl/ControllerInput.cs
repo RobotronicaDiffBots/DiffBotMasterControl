@@ -76,15 +76,16 @@ namespace DiffBotMasterControl
 
 			p.robotID = (byte)channels[p.remoteID - 1][robotType];
 			RobotSerial.AddPacket(p.robotID, p.type, p.ldrive, p.rdrive, p.remoteID, p.buttons);
-
-			bool lt = (p.buttons & 0x80) != 0;
-			bool rt = (p.buttons & 0x40) != 0;
-			if (lt) RobotSerial.AddPacket(p.robotID, 120, 3, 0, 0, 40);
-			if (rt) RobotSerial.AddPacket(p.robotID, 120, 0, 0, 0, 40);
 		}
 
 		public static bool Connected(int controller) {
 			return DateTime.Now - recvTimes[controller] < TimeSpan.FromSeconds(.5);
+		}
+
+		public static void SendKeepAlive() {
+			for(int i = 0; i < ControllerCount; i++)
+				if(Connected(i))
+					RobotSerial.AddPacket((byte)channels[i][robotType], 255, 0, 0, 0, 0);
 		}
 	}
 }
