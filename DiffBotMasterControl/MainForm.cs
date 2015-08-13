@@ -123,6 +123,12 @@ namespace DiffBotMasterControl
 			}));
 		}
 
+		internal void ResetCommandList() {
+			Invoke(new Action(() => {
+				listBoxCommands.Items.Clear();
+			}));
+		}
+
 		private void dataGridChannels_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e) {
 			if (e.ColumnIndex > 0) {
 				ControllerInput.RobotType = e.ColumnIndex - 1;

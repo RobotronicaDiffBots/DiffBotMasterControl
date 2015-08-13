@@ -70,6 +70,11 @@ namespace DiffBotMasterControl
 		}
 
 		public static void Load() {
+			MainForm.Instance.ResetCommandList();
+			commandMap.Clear();
+			keyMap.Clear();
+			Add("Reload Commands", Keys.None, Load);
+
 			try {
 				var file = "UserCommands.cs";
 				if (!File.Exists(file))
