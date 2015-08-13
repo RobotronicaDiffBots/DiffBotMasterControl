@@ -13,6 +13,7 @@ namespace DiffBotMasterControl
 		private static int robotType;
 		private static bool enabled;
 
+		private static readonly TimeSpan ControllerTimeout = TimeSpan.FromMilliseconds(300);
 		private static DateTime[] recvTimes = new DateTime[ControllerCount];
 		private static bool[] alive = new bool[ControllerCount];
 
@@ -82,7 +83,7 @@ namespace DiffBotMasterControl
 		}
 
 		public static bool Connected(int controller) {
-			return DateTime.Now - recvTimes[controller] < TimeSpan.FromSeconds(.5);
+			return DateTime.Now - recvTimes[controller] < ControllerTimeout;
 		}
 
 		public static void SendKeepAlive() {
@@ -110,6 +111,15 @@ namespace DiffBotMasterControl
 		public static void ResetAlive() {
 			for (int i = 0; i < ControllerCount; i++)
 				alive[i] = false;
+		}
+
+		public static void StopAlive() {
+			for (int i = 0; i < ControllerCount; i++) {
+				if (alive[i])
+					StopBot((byte)channels[i][robotType]);
+
+				alive[i] = false;
+			}
 		}
 	}
 }

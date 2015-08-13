@@ -33,6 +33,7 @@ namespace DiffBotMasterControl
 				throw new Exception("Not connected");
 
 			Log.Info("Disconnecting robot serial");
+			ControllerInput.StopAlive();
 			serial.Close();
 			serial = null;
 		}
