@@ -62,11 +62,12 @@ namespace DiffBotMasterControl
 			}
 		}
 
-		private static readonly TimeSpan heartbeatInterval = TimeSpan.FromSeconds(0.5);
+		private static readonly TimeSpan heartbeatInterval = TimeSpan.FromSeconds(0.25);
 		private static void HeartbeatThread(DiffBotSerial serial) {
 			try {
 				var ct = serial.CancellationToken();
 				var stopwatch = new Stopwatch();
+				ControllerInput.ResetAlive();
 				while (!ct.IsCancellationRequested) {
 					stopwatch.Restart();
 					ControllerInput.SendKeepAlive();

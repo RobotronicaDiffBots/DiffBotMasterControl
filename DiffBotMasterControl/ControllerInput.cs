@@ -12,11 +12,14 @@ namespace DiffBotMasterControl
 		private static int[][] channels = new int[ControllerCount][];
 		private static int robotType;
 		private static bool enabled;
+
 		private static DateTime[] recvTimes = new DateTime[ControllerCount];
+		private static bool[] alive = new bool[ControllerCount];
 
 		public static int RobotType {
 			get { return robotType; }
 			set {
+				if (robotType != value) StopOldBots(robotType, value);
 				robotType = value;
 				Properties.Settings.Default.RobotType = value;
 			}
@@ -83,9 +86,30 @@ namespace DiffBotMasterControl
 		}
 
 		public static void SendKeepAlive() {
-			for(int i = 0; i < ControllerCount; i++)
-				if(Connected(i))
+			for (int i = 0; i < ControllerCount; i++) {
+				var connected = Connected(i);
+				if(connected)
 					RobotSerial.AddPacket((byte)channels[i][robotType], 255, 0, 0, 0, 0);
+				else if(alive[i])
+					StopBot((byte)channels[i][robotType]);
+
+				alive[i] = connected;
+			}
+		}
+
+		private static void StopOldBots(int oldRobotType, int newRobotType) {
+			for (int i = 0; i < ControllerCount; i++)
+				if (alive[i] && channels[i][oldRobotType] != channels[i][newRobotType])
+					StopBot((byte)channels[i][oldRobotType]);
+		}
+
+		private static void StopBot(byte robotID) {
+			RobotSerial.AddPacket(robotID, 1, 100, 100, 0, 0);
+		}
+
+		public static void ResetAlive() {
+			for (int i = 0; i < ControllerCount; i++)
+				alive[i] = false;
 		}
 	}
 }
