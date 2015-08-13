@@ -11,7 +11,7 @@ namespace DiffBotMasterControl
 		public static readonly ControllerPortForm Instance = new ControllerPortForm();
 		private string[] serialPorts = SerialPort.GetPortNames();
 
-		private static readonly TimeSpan ScanTimeout = TimeSpan.FromSeconds(0.5);
+		private static readonly TimeSpan ScanTimeout = TimeSpan.FromSeconds(1);
 		private static readonly TimeSpan ConnectScanTimeout = TimeSpan.FromSeconds(3);
 
 		public static void Init() {

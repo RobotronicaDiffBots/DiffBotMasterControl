@@ -11,7 +11,7 @@ namespace DiffBotMasterControl
 		public static readonly int RobotTypeCount = 3;
 		private static int[][] channels = new int[ControllerCount][];
 		private static int robotType;
-		private static bool enabled;
+		private static bool enabled = true;
 
 		private static readonly TimeSpan ControllerTimeout = TimeSpan.FromMilliseconds(300);
 		private static DateTime[] recvTimes = new DateTime[ControllerCount];
@@ -78,6 +78,8 @@ namespace DiffBotMasterControl
 			if (p.remoteID < 1 || p.remoteID > ControllerCount) return;
 			recvTimes[p.remoteID - 1] = DateTime.Now;
 
+			if (!enabled) return;
+
 			p.robotID = (byte)channels[p.remoteID - 1][robotType];
 			RobotSerial.AddPacket(p.robotID, p.type, p.ldrive, p.rdrive, p.remoteID, p.buttons);
 		}
@@ -106,6 +108,7 @@ namespace DiffBotMasterControl
 
 		private static void StopBot(byte robotID) {
 			RobotSerial.AddPacket(robotID, 1, 100, 100, 0, 0);
+			Log.Info("Stopping "+robotID);
 		}
 
 		public static void ResetAlive() {
