@@ -33,7 +33,7 @@ namespace DiffBotMasterControl
 				throw new Exception("Not connected");
 
 			Log.Info("Disconnecting robot serial");
-			ControllerInput.StopAlive();
+			ControllerInput.StopAlive(); //may not actually get through in time
 			serial.Close();
 			serial = null;
 		}
@@ -44,12 +44,12 @@ namespace DiffBotMasterControl
 
 		public static void AddPacket(IEnumerable<int> rIDs, byte type, byte d1, byte d2, byte d3, byte d4) {
 			foreach (var rID in rIDs)
-				AddPacket((byte)rID, type, d1, d2, d3, d4);
+				AddPacket(rID, type, d1, d2, d3, d4);
 		}
 
-		public static void AddPacket(byte rID, byte type, byte d1, byte d2, byte d3, byte d4) {
-			if (Connected())
-				packetQueue.Add(new[] { rID, type, d1, d2, d3, d4, ++seqno });
+		public static void AddPacket(int rID, byte type, byte d1, byte d2, byte d3, byte d4) {
+			if (Connected() && rID > 0 && rID < 255)
+				packetQueue.Add(new[] { (byte)rID, type, d1, d2, d3, d4, ++seqno });
 		}
 
 		private static void WriteThread(DiffBotSerial serial) {

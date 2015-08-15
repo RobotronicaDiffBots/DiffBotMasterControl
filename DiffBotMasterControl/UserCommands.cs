@@ -46,6 +46,10 @@ namespace DiffBotMasterControl
 			Commands.Add("Enable Controllers", Keys.O, ControllerInput.Enable);
 			Commands.Add("Disable Controllers", Keys.P, () => { ControllerInput.Disable(); ControllerInput.StopAlive(); });
 
+			Commands.Add("Default Cube Channels", Keys.None, () => {
+				for(int i = 0; i < 10; i++) ControllerInput.SetChannel(i, 0, ControllerInput.SimpleChannel(i+1));
+			});
+
 			Commands.Add("Red", Keys.R, () => RobotSerial.AddPacket(250, 120, 2, 0, 100, 40));
 			Commands.Add("Green", Keys.G, () => RobotSerial.AddPacket(250, 120, 3, 0, 100, 40));
 			Commands.Add("Blue", Keys.B, () => RobotSerial.AddPacket(250, 120, 4, 0, 100, 40));

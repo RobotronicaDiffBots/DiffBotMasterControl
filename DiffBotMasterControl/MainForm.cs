@@ -30,11 +30,15 @@ namespace DiffBotMasterControl
 			if (e.ColumnIndex == 0)
 				return;
 
-			int i;
-			if (!int.TryParse(e.FormattedValue as string, out i) || i < 1 || i > 255)
-				dataGridChannels.EditingControl.Text = ControllerInput.GetChannel(e.RowIndex, e.ColumnIndex-1).ToString();
+			var ch = ControllerInput.ParseChannel(e.FormattedValue.ToString());
+			if (ch != null)
+				ControllerInput.SetChannel(e.RowIndex, e.ColumnIndex-1, ch);
 			else
-				ControllerInput.SetChannel(e.RowIndex, e.ColumnIndex-1, i);
+				dataGridChannels.EditingControl.Text = ControllerInput.GetChannel(e.RowIndex, e.ColumnIndex-1).ToString();
+		}
+
+		internal void SetChannel(int controller, int robotType, string ident) {
+			Invoke(new Action(() => dataGridChannels[robotType + 1, controller].Value = ident));
 		}
 
 		private void dataGridChannels_Leave(object sender, EventArgs e) {
