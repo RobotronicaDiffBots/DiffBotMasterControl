@@ -76,7 +76,9 @@ namespace DiffBotMasterControl
 				if (range.Length != 2) return null;
 				var i = new int[2];
 				if (int.TryParse(range[0], out i[0]) && int.TryParse(range[1], out i[1]) &&
-						i[0] > 0 && i[0] < 256 && i[1] > 0 && i[1] < 256)
+						i[0] > 0 && i[0] < 256 && 
+						i[1] > 0 && i[1] < 256 && 
+						i[0] <= i[1])
 					return RangeChannel(i[0], i[1]);
 
 				return null;
