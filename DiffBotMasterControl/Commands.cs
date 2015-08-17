@@ -73,6 +73,7 @@ namespace DiffBotMasterControl
 			MainForm.Instance.ResetCommandList();
 			commandMap.Clear();
 			keyMap.Clear();
+			ControllerInput.Reset();
 			Add("Reload Commands", Keys.None, Load);
 
 			try {
@@ -106,6 +107,9 @@ namespace DiffBotMasterControl
 			}
 			catch (Exception e) {
 				Log.Error(e.ToString());
+			}
+			finally {
+				ControllerInput.Load();
 			}
 		}
 

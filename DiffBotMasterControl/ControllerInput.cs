@@ -44,12 +44,15 @@ namespace DiffBotMasterControl
 			}
 		}
 
-		static ControllerInput() {
+		internal static void Reset() {
+			channelParsers.Clear();
+			AddDefaultParsers();
+		}
+
+		internal static void Load() {
 			robotType = Properties.Settings.Default.RobotType;
 			if (robotType < 0 || robotType >= RobotTypeCount)
 				RobotType = 0;
-
-			AddDefaultParsers();
 
 			for (int i = 0; i < channels.Length; i++)
 				channels[i] = new[] { SimpleChannel(i + 1), SimpleChannel(i + 13), SimpleChannel(i + 23) };
@@ -151,7 +154,7 @@ namespace DiffBotMasterControl
 			return new ChannelSetting(rID.ToString(), new [] {rID}.ToList());
 		}
 
-		private static ChannelSetting RangeChannel(int first, int last) {
+		public static ChannelSetting RangeChannel(int first, int last) {
 			return new ChannelSetting(first + ":" + last, Enumerable.Range(first, last-first+1).ToList());
 		}
 

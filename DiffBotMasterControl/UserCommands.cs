@@ -24,7 +24,7 @@ namespace DiffBotMasterControl
 			var intervalT = new Stopwatch();
 
 			limitT.Start();
-			while (limitT.Elapsed < interval) {
+			while (limitT.Elapsed < limit) {
 				intervalT.Restart();
 				action();
 				Wait(ct, interval - intervalT.Elapsed);
@@ -46,9 +46,13 @@ namespace DiffBotMasterControl
 			Commands.Add("Enable Controllers", Keys.O, ControllerInput.Enable);
 			Commands.Add("Disable Controllers", Keys.P, () => { ControllerInput.Disable(); ControllerInput.StopAlive(); });
 
-			Commands.Add("Default Cube Channels", Keys.None, () => {
+			Commands.Add("Default Cube Channels", Keys.None, ct => {
 				for(int i = 0; i < 10; i++) ControllerInput.SetChannel(i, 0, ControllerInput.SimpleChannel(i+1));
 			});
+
+			//example hardcoded simple channel
+			var ch = new ControllerInput.ChannelSetting("ex", new[] {1, 2, 3, 5, 8, 13}.ToList());
+			ControllerInput.AddChannelParser(s => s == ch.ident ? ch : null);
 
 			Commands.Add("Red", Keys.R, () => RobotSerial.AddPacket(250, 120, 2, 0, 100, 40));
 			Commands.Add("Green", Keys.G, () => RobotSerial.AddPacket(250, 120, 3, 0, 100, 40));

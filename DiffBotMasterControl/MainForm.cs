@@ -14,16 +14,13 @@ namespace DiffBotMasterControl
 			InitializeComponent();
 
 			textBoxKey_SetText("[ ]");
-
-			ControllerInput.PopulateChannelGrid(dataGridChannels);
-			RecolourChannelGrid();
-
 			Instance = this;
 		}
 
 		private void MainForm_Load(object sender, EventArgs e) {
 			ControllerPortForm.Init();
 			Commands.Load();
+			ControllerInput.PopulateChannelGrid(dataGridChannels);
 		}
 
 		private void dataGridChannels_CellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
